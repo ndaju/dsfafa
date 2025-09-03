@@ -75,7 +75,7 @@ Tabs.Main:AddParagraph({
         Callback = function()
 				getgenv().executedfromkeysystem = false
 		getgenv().executedfrommenu = true
-			loadstring(game:HttpGet("https://cdn.authguard.org/virtual-file/9757aa759085435a824918c516a7130a"))()
+			loadstring(game:HttpGet("https://cdn.authguard.org/virtual-file/e6bc70fb16c941a3ba25d29e01c4caa8"))()
         end
     })
 
