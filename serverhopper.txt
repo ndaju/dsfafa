@@ -49,8 +49,8 @@ end
 local locale = getLocale()
 
 local Texts = {
-    en = { title="Auto Joiner V2", on="ON", off="OFF", buttonOn="Enable AutoJoin", buttonOff="Disable AutoJoin", credits="Made By: ,  By HackManHub https://discord.gg/cuwKyeuCVR" },
-    pt = { title="Auto Joiner V2", on="LIGADO", off="DESLIGADO", buttonOn="Ligar AutoJoin", buttonOff="Desligar AutoJoin", credits="Made By: , By HackManHub https://discord.gg/cuwKyeuCVR" }
+    en = { title="Auto Joiner V2", on="ON", off="OFF", buttonOn="Enable AutoJoin", buttonOff="Disable AutoJoin", credits="Made By: By HackManHub https://discord.gg/cuwKyeuCVR" },
+    pt = { title="Auto Joiner V2", on="LIGADO", off="DESLIGADO", buttonOn="Ligar AutoJoin", buttonOff="Desligar AutoJoin", credits="Made By: By HackManHub https://discord.gg/cuwKyeuCVR" }
 }
 
 -- Fetch new job ID
