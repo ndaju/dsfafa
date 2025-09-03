@@ -1,0 +1,204 @@
+ ---- by hackmanhub https://discord.gg/cuwKyeuCVR
+
+
+-- Services
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalizationService = game:GetService("LocalizationService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Config
+local API_URL = "https://auto-joiner-api.squareweb.app/get_clipboard"
+local PLACE_ID = 109983601143549 + 66935688
+local USED_JOBIDS_FILE = "used_jobids.json"
+local AutoJoinEnabled = false
+local UsedJobIds = {}
+
+-- Load used job IDs
+pcall(function()
+    if isfile and isfile(USED_JOBIDS_FILE) then
+        UsedJobIds = HttpService:JSONDecode(readfile(USED_JOBIDS_FILE))
+    end
+end)
+
+-- Save used job IDs
+local function saveUsedJobIds()
+    pcall(function()
+        if writefile then
+            writefile(USED_JOBIDS_FILE, HttpService:JSONEncode(UsedJobIds))
+        end
+    end)
+end
+
+-- Localization
+local function getLocale()
+    local locale = LocalizationService.RobloxLocaleId
+    if locale:sub(1,2) == "pt" then
+        return "pt"
+    else
+        return "en"
+    end
+end
+
+local locale = getLocale()
+
+local Texts = {
+    en = { title="Auto Joiner V2", on="ON", off="OFF", buttonOn="Enable AutoJoin", buttonOff="Disable AutoJoin", credits="Made By: ,  By HackManHub https://discord.gg/cuwKyeuCVR" },
+    pt = { title="Auto Joiner V2", on="LIGADO", off="DESLIGADO", buttonOn="Ligar AutoJoin", buttonOff="Desligar AutoJoin", credits="Made By: , By HackManHub https://discord.gg/cuwKyeuCVR" }
+}
+
+-- Fetch new job ID
+local function fetchNewJobId()
+    while true do
+        local success, response = pcall(function() return game:HttpGet(API_URL) end)
+        if success and response then
+            local jobId = tostring(response):gsub("%s+","")
+            if jobId ~= "" and not UsedJobIds[jobId] then
+                return jobId
+            end
+        end
+    end
+end
+
+-- Create frame
+local function createFrame(parent, size, position, color, cornerRadius)
+    local frame = Instance.new("Frame")
+    frame.Size = size
+    frame.Position = position
+    frame.BackgroundColor3 = color or Color3.fromRGB(25,25,30)
+    frame.BorderSizePixel = 0
+    frame.Parent = parent
+
+    local corner = Instance.new("UICorner", frame)
+    corner.CornerRadius = UDim.new(0, cornerRadius or 10)
+
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Thickness = 2
+    stroke.Color = Color3.fromRGB(200,200,200)
+    stroke.Transparency = 0.4
+
+    return frame
+end
+
+-- Create label
+local function createLabel(parent, size, position, text, textSize, bold, color)
+    local label = Instance.new("TextLabel")
+    label.Size = size
+    label.Position = position
+    label.BackgroundTransparency = 1
+    label.Font = bold and Enum.Font.GothamBold or Enum.Font.Gotham
+    label.TextSize = textSize or 14
+    label.TextColor3 = color or Color3.fromRGB(255,255,255)
+    label.Text = text or ""
+    label.TextWrapped = true
+    label.Parent = parent
+    return label
+end
+
+-- Create button
+local function createButton(parent, size, position, text, color)
+    local button = Instance.new("TextButton")
+    button.Size = size
+    button.Position = position
+    button.BackgroundColor3 = color or Color3.fromRGB(0,150,255)
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 18
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(255,255,255)
+    button.BorderSizePixel = 0
+    button.Parent = parent
+
+    local corner = Instance.new("UICorner", button)
+    corner.CornerRadius = UDim.new(0,12)
+
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(0,200,255)}):Play()
+    end)
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button,TweenInfo.new(0.15),{BackgroundColor3=color or Color3.fromRGB(0,150,255)}):Play()
+    end)
+
+    return button
+end
+
+-- Make draggable
+local function makeDraggable(frame)
+    local dragging, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-- Create GUI
+local function createGUI()
+    if PlayerGui:FindFirstChild("AutoJoinGUI") then
+        PlayerGui.AutoJoinGUI:Destroy()
+    end
+
+    local screenGui = Instance.new("ScreenGui", PlayerGui)
+    screenGui.Name = "AutoJoinGUI"
+    screenGui.ResetOnSpawn = false
+
+    local mainFrame = createFrame(screenGui, UDim2.new(0,360,0,200), UDim2.new(0.5,-180,0.5,-100))
+    makeDraggable(mainFrame)
+
+    local titleLabel = createLabel(mainFrame, UDim2.new(1,0,0,40), UDim2.new(0,10,0,10), Texts[locale].title, 24, true)
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local statusLabel = createLabel(mainFrame, UDim2.new(1,0,0,40), UDim2.new(0,10,0,60), "Status: "..Texts[locale].off, 16)
+    statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local toggleButton = createButton(mainFrame, UDim2.new(0,180,0,50), UDim2.new(0.5,-90,0.6,0), Texts[locale].buttonOn)
+    toggleButton.MouseButton1Click:Connect(function()
+        AutoJoinEnabled = not AutoJoinEnabled
+        if AutoJoinEnabled then
+            toggleButton.Text = Texts[locale].buttonOff
+            statusLabel.Text = "Status: "..Texts[locale].on
+            statusLabel.TextColor3 = Color3.fromRGB(0,255,0)
+        else
+            toggleButton.Text = Texts[locale].buttonOn
+            statusLabel.Text = "Status: "..Texts[locale].off
+            statusLabel.TextColor3 = Color3.fromRGB(255,0,0)
+        end
+    end)
+
+    local creditsLabel = createLabel(mainFrame, UDim2.new(1,0,0,18), UDim2.new(0,10,1,-25), Texts[locale].credits, 14)
+    creditsLabel.TextXAlignment = Enum.TextXAlignment.Left
+end
+
+createGUI()
+
+-- Auto join logic
+RunService.Heartbeat:Connect(function()
+    if AutoJoinEnabled then
+        local jobId = fetchNewJobId()
+        if jobId then
+            UsedJobIds[jobId] = true
+            saveUsedJobIds()
+            pcall(function()
+                TeleportService:TeleportToPlaceInstance(PLACE_ID, jobId, LocalPlayer)
+            end)
+        end
+    end
+end)
