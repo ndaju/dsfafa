@@ -1,4 +1,11 @@
--- Gui to Lua
+local link = "https://discord.gg/cuwKyeuCVR"
+
+		if link then
+			setclipboard(link)
+			submittext("Link Copied, Paste In Browser")
+		else
+			submittext("Failed to Retrieve Link")
+		end
 -- Version: 3.6
 
 -- Instances:
@@ -41,8 +48,7 @@ CloseButton.TextSize = 14.000
 CloseButton.TextWrapped = true
 
 CloseButton.MouseButton1Click:Connect(function()
-	print("a")
-	setclipboard(https://discord.gg/cuwKyeuCVR)
+print("closae")
 end)
 
 
